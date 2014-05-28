@@ -36,25 +36,17 @@ module.exports = function (options) {
 				}
 
 				options = options || { delimiter: ',', escape: '"' };
+				var transform = options.transform || function (row) { return row };
+				var record_transform = options.record_transform || function (row) { return row };
+
 
 				csv()
 					.from.path(tempFile, options)
 					//.to.stream(fs.createWriteStream(config.output))
-					.transform( function(row){
-						row.unshift(row.pop());
-						return row;
-					})
+					.transform(transform)
 					.on('record', function(row, index){
-
-						if(index === 0) {
-							header = row;
-						}else{
-							var obj = {};
-							header.forEach(function(column, index) {
-								obj[column] = row[index];
-							})
-							record.push(obj);
-						}
+						var obj = record_transform(row);
+						record.push(obj);
 					})
 					.on('end', function(count){
 						// when writing to a file, use the 'close' event
